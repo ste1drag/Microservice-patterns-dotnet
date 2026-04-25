@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Game.Domain.Entities
 {
-    class Stadium
+    public class Stadium
     {
         #region Properties
         public Guid Id { get; set; }

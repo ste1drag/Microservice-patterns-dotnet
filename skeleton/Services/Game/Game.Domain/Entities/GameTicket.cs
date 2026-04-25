@@ -6,7 +6,16 @@ using System.Threading.Tasks;
 
 namespace Game.Domain.Entities
 {
-    class GameTicket
+    public class GameTicket
     {
+        #region Properties
+        public Guid Id { get; set; }
+        public Guid GameId { get; set; }
+        public Guid SeatId { get; set; }
+        public int Price { get; set; }
+        public bool IsSold { get; set; }
+        public Game Game { get; set; }
+        public StadiumSeat Seat { get; set; }
+        #endregion
     }
 }
