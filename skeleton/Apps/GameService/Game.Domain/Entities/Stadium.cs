@@ -10,6 +10,7 @@ namespace Game.Domain.Entities
     {
         #region Properties
         public Guid Id { get; set; }
+        public Guid HomeTeamId { get; set; }
         public string Name { get; set; }
         public string City { get; set; }
         public int Capacity { get; set; }

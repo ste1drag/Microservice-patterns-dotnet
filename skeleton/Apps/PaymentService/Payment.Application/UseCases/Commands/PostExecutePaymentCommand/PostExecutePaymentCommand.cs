@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 
 namespace Payment.Application.UseCases.Commands.PostExecutePaymentCommand
 {
-    public class ExecutePaymentCommand: ICommand<string>
+    public class PostExecutePaymentCommand: ICommand<string>
     {
-        public TicketSeatPaymentDTO ticketSeatPaymentDTO { get; set; }
+        public TicketSeatPaymentDTO TicketSeatPaymentDTO{ get; set; }
     }
 }

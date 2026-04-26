@@ -19,7 +19,7 @@ namespace Payment.Application.UseCases.Commands.PostExecutePaymentCommand
 
         public async Task<string> Handle(PostExecutePaymentCommand command)
         {
-            var result = await _transactionRepository.ExecutePayment(command.ticketSeatPaymentDTO);
+            var result = await _transactionRepository.ExecutePayment(command.TicketSeatPaymentDTO);
             return result;
         }
     }

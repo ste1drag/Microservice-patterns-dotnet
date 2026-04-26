@@ -14,7 +14,6 @@ namespace Game.Domain.Entities
         public string Name { get; set; }
         public string City { get; set; }
         public Stadium HomeStadium { get; set; }
-
         #endregion
     }
 }
