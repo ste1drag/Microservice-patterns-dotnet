@@ -15,5 +15,7 @@ namespace Game.Application.Contracts.Repository
         Task <List<GameTicket>> GetGameTicketsByGameId(Guid gameId);
         Task <GameInfoSeatModel> GetGameInfoSeat(Guid gameId, Guid seatId);
         Task<string> ExecuteTicketPayment(TicketSeatPaymentDTO ticketSeatPaymentDTO);
+
+        Task<string> ConfirmTicketPayment(TicketSeatPaymentDTO ticketSeatPaymentDTO);
     }
 }

@@ -12,7 +12,7 @@ namespace Game.Domain.Interfaces
         public Guid SeatId { get; set; }
         public bool IsAvailable { get; set; }
         public int Price { get; set; }
-        public int Message { get; set; }
+        public string Message { get; set; }
         public int Level { get; set; }
         public int SeatNumber { get; set; }
     }

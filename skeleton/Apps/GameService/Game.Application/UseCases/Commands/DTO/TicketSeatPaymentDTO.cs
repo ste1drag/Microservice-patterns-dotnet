@@ -8,8 +8,9 @@ namespace Game.Application.UseCases.Commands.DTO
 {
     public class TicketSeatPaymentDTO
     {
-        public string GameId { get; set; }
-        public string StadiumSeatId { get; set; }
+        public Guid GameId { get; set; }
+        public Guid StadiumSeatId { get; set; }
         public decimal Price { get; set; }
+
     }
 }

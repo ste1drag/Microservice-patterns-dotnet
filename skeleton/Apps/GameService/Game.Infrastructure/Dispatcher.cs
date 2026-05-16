@@ -21,7 +21,7 @@ namespace Game.Infrastructure
         {
             var handlerType = typeof(ICommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResult));
             dynamic handler = _serviceProvider.GetService(handlerType);
-            return await handler.Handle((dynamic)command);
+            return await handler.Handle((dynamic)command); 
         }
 
         public async Task<TResult> Query<TResult>(IQuery<TResult> query)

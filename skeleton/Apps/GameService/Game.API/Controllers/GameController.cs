@@ -34,7 +34,8 @@ namespace Game.API.Controllers
         {
             var query = new GetAllGamesQuery();
             var result = await _dispatcher.Query(query);
-            return Ok();
+
+            return Ok(result);
         }
 
         [HttpGet("get-game-by-id/{id}")]
@@ -43,7 +44,8 @@ namespace Game.API.Controllers
             Guid guid = new Guid(id, 0, 0, new byte[8]);
             var query = new GetGameByIdQuery { Id = guid };
             var result = await _dispatcher.Query(query);
-            return Ok();
+
+            return Ok(result);
         }
 
         [HttpGet("get-seat-info/game/{gameId}/seat/{seatId}")]
@@ -51,6 +53,7 @@ namespace Game.API.Controllers
         {
             var query = new GetSeatInfoQuery { GameId = gameId, SeatId = seatId };
             var result = await _dispatcher.Query(query);
+
             return Ok(result);
         }
     }

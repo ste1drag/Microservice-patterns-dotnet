@@ -14,6 +14,9 @@ namespace Game.Domain.Entities
         public string Name { get; set; }
         public string City { get; set; }
         public Stadium HomeStadium { get; set; }
+
+        public List<Game> HomeGames { get; set; }
+        public List<Game> AwayGames { get; set; }
         #endregion
     }
 }
