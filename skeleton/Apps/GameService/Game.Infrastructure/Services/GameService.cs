@@ -1,13 +1,13 @@
-﻿using Game.Application.Contracts.Repository;
+﻿using Game.Application.Contracts.Client;
+using Game.Application.Contracts.Repository;
 using Game.Application.UseCases.Commands.DTO;
 using Game.Domain.Entities;
+using Game.Domain.Enums;
 using Game.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
-using System.Buffers.Text;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,21 +15,48 @@ namespace Game.Infrastructure.Services
 {
     public class GameService: BaseService<Domain.Entities.Game>, IGameRepository
     {
+
+        public async Task<List<Domain.Entities.Game>> GetAllGamesWithDetailsAsync()
+        {
+            return await _gameDbContext.Games
+                .Include(g => g.HomeTeam)
+                .Include(g => g.AwayTeam)
+                .Include(g => g.GamePlace)
+                .ToListAsync();
+        }
+
+        public async Task<Domain.Entities.Game?> GetGameByIdWithDetailsAsync(Guid id)
+        {
+            return await _gameDbContext.Games
+                .Include(g => g.HomeTeam)
+                .Include(g => g.AwayTeam)
+                .Include(g => g.GamePlace)
+                .FirstOrDefaultAsync(g => g.Id == id);
+        }
+
         public GameService(GameDbContext gameDbContext) : base(gameDbContext)
         {
         }
 
         public async Task<List<Domain.Entities.Game>> GetGamesByStadiumId(Guid stadiumId)
         {
-            var results = await _gameDbContext.Games.Where(g => g.StadiumId == stadiumId).ToListAsync();
+            var results = await _gameDbContext.Games
+                .Where(g => g.StadiumId == stadiumId)
+                .Include(g => g.HomeTeam)
+                .Include(g => g.AwayTeam)
+                .Include(g => g.GamePlace)
+                .ToListAsync();
 
             return results;
         }
 
-
         public async Task<List<GameTicket>> GetGameTicketsByGameId(Guid gameId)
         {
-            var results = await _gameDbContext.GameTickets.Where(gt => gt.GameId == gameId).ToListAsync();
+            var results = await _gameDbContext.GameTickets
+                .Where(gt => gt.GameId == gameId)
+                .Include(gt => gt.Game)
+                .Include(gt => gt.Seat)
+                .ToListAsync();
 
             if (results == null || results.Count == 0)
             {
@@ -41,20 +68,20 @@ namespace Game.Infrastructure.Services
 
         public async Task<GameInfoSeatModel> GetGameInfoSeat(Guid gameId, Guid seatId)
         {
-            var result = _gameDbContext.GameTickets
+            var result = await _gameDbContext.GameTickets
                 .Where(gt => gt.GameId == gameId && gt.SeatId == seatId)
-                .Include(gt => gt.Seat) // Include the Seat navigation property to access SeatNumber and Level
+                .Include(gt => gt.Seat)
                 .Select(gt => new GameInfoSeatModel
                 {
                     GameId = gt.GameId,
                     SeatId = gt.SeatId,
-                    IsAvailable = true,
+                    IsAvailable = gt.Status == TicketStatus.Available,
                     Price = gt.Price,
-                    Message =  "Dostupno za kupovinu",
+                    Message = gt.Status == TicketStatus.Available ? "Dostupno za kupovinu" : "Nije dostupno za kupovinu",
                     Level = gt.Seat.Level,
                     SeatNumber = gt.Seat.SeatNumber
                 })
-                .FirstOrDefault();
+                .FirstOrDefaultAsync();
 
             if (result == null)
             {
@@ -73,30 +100,41 @@ namespace Game.Infrastructure.Services
             return result;
         }
 
-        public async Task<string> ExecuteTicketPayment(TicketSeatPaymentDTO ticketSeatPaymentDTO)
+        public async Task<bool> TryReserveTicketAsync(Guid ticketId, Guid reservationId)
         {
-            var client = new HttpClient();
-            client.BaseAddress = new Uri("https://api.ticketpay.com/v1/");
+            var updated = await _gameDbContext.GameTickets
+                .Where(gt => gt.Id == ticketId && gt.Status == TicketStatus.Available)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(gt => gt.Status, TicketStatus.Reserved)
+                    .SetProperty(gt => gt.ReservedAt, DateTime.UtcNow)
+                    .SetProperty(gt => gt.ReservationId, reservationId)
+                );
 
-            var response = await client.PostAsJsonAsync<TicketSeatPaymentDTO>("/ticketpay", ticketSeatPaymentDTO);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var responseData = await response.Content.ReadFromJsonAsync<String>();
-                return responseData;
-            }
-            else
-            {
-                // Handle error response
-                return "Error: " + response.StatusCode;
-            }
+            return updated > 0;
         }
 
-        public async Task<string> ConfirmTicketPayment(TicketSeatPaymentDTO ticketSeatPaymentDTO)
+        public async Task<bool> ConfirmTicketAsync(Guid ticketId)
         {
-            // Simulate confirmation logic
-            return "Payment confirmed for ticket: " + ticketSeatPaymentDTO.GameId;
+            var updated = await _gameDbContext.GameTickets
+                .Where(gt => gt.Id == ticketId && gt.Status == TicketStatus.Reserved)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(gt => gt.Status, TicketStatus.Sold)
+                );
+
+            return updated > 0;
         }
 
+        public async Task<bool> ReleaseTicketAsync(Guid ticketId)
+        {
+            var updated = await _gameDbContext.GameTickets
+                .Where(gt => gt.Id == ticketId && gt.Status == TicketStatus.Reserved)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(gt => gt.Status, TicketStatus.Available)
+                    .SetProperty(gt => gt.ReservedAt, (DateTime?)null)
+                    .SetProperty(gt => gt.ReservationId, (Guid?)null)
+                );
+
+            return updated > 0;
+        }
     }
 }

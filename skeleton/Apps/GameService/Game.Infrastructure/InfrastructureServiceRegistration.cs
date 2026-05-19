@@ -1,5 +1,7 @@
-﻿using Game.Application.Contracts.Repository;
+﻿using Game.Application.Contracts.Client;
+using Game.Application.Contracts.Repository;
 using Game.Application.Interfaces;
+using Game.Infrastructure.Clients;
 using Game.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore; // Ensure this is included
 using Microsoft.Extensions.Configuration;
@@ -16,6 +18,13 @@ namespace Game.Infrastructure
 
             services.AddDbContext<GameDbContext>(options =>
                 options.UseNpgsql(connectionString)); // Ensure the Npgsql package is installed
+
+            var paymentServiceUrl = configuration["Services:PaymentServiceUrl"] ?? "http://localhost:5001/api/payment/";
+            
+            services.AddHttpClient<IPaymentClient, PaymentHttpClient>(client =>
+            {
+                client.BaseAddress = new Uri(paymentServiceUrl);
+            });
 
             services.AddScoped<IGameRepository, GameService>();
             services.AddScoped<IStadiumRepository, StadiumService>();

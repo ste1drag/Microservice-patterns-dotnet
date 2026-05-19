@@ -61,6 +61,11 @@ namespace Game.Infrastructure
                 .HasOne(gt => gt.Seat)
                 .WithOne(s => s.Ticket)
                 .HasForeignKey<GameTicket>(gt => gt.SeatId);
+
+            modelBuilder.Entity<GameTicket>()
+                .Property(gt => gt.Status)
+                .HasConversion<int>()
+                .IsRequired();
             // Configure relationships and constraints here if needed
         }
     }
