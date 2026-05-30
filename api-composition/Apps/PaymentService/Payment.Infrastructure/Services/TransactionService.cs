@@ -1,4 +1,5 @@
-﻿using Payment.Application.Contracts.Repositories;
+﻿using Microsoft.EntityFrameworkCore;
+using Payment.Application.Contracts.Repositories;
 using Payment.Application.UseCases.Commands.DTO;
 using Payment.Domain.Entities;
 using Payment.Domain.Enums;
@@ -48,6 +49,13 @@ namespace Payment.Infrastructure.Services
         ? "Payment executed successfully"
         : "Payment failed (invalid amount)"
             };
+        }
+
+        public Task<Transaction?> GetByIdAndTicketAsync(Guid transactionId, Guid gameTicketId)
+        {
+            return _paymentDbcontext.Transactions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.Id == transactionId && t.GameTicketId == gameTicketId);
         }
     }
 }

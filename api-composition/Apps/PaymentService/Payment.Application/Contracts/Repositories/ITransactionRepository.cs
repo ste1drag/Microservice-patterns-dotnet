@@ -11,5 +11,6 @@ namespace Payment.Application.Contracts.Repositories
     public interface ITransactionRepository : IAsyncRepository<Transaction>
     {
         Task<PaymentResultDto> ExecutePayment(TicketSeatPaymentDTO ticketSeatPaymentDTO);
+        Task<Transaction?> GetByIdAndTicketAsync(Guid transactionId, Guid gameTicketId);
     }
 }
