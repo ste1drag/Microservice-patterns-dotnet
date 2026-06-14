@@ -1,4 +1,5 @@
 using Hangfire;
+using Microsoft.EntityFrameworkCore;
 using Payment.Application;
 using Payment.Infrastructure;
 
@@ -25,19 +26,24 @@ builder.Services.AddCors(options =>
     });
 });
 
-RecurringJob.AddOrUpdate<OutboxProcessor>(
-    "ProcessOutboxMessages",
-    processor => processor.ProcessOutboxMessagesAsync(CancellationToken.None),
-    Cron.Minutely);
-
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+    recurringJobManager.AddOrUpdate<OutboxProcessor>(
+        "ProcessOutboxMessages",
+        processor => processor.ProcessOutboxMessagesAsync(CancellationToken.None),
+        Cron.Minutely);
+}
 
 // Apply EF migrations at startup in development
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<PaymentDbContext>();
-    
+    await db.Database.MigrateAsync();
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }

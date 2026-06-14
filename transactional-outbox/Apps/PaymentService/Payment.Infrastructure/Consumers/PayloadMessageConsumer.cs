@@ -12,7 +12,9 @@ namespace Payment.Infrastructure.Consumers
     public class PayloadMessageConsumer : IConsumer<PaymentRequestedMessage>
     {
         private readonly ITransactionRepository _transactionRepository;
-        public PayloadMessageConsumer() { 
+        public PayloadMessageConsumer(ITransactionRepository transactionRepository) 
+        { 
+            _transactionRepository = transactionRepository;
         }
 
         public async Task Consume(ConsumeContext<PaymentRequestedMessage> context)

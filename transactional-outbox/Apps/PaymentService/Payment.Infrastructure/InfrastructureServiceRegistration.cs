@@ -4,8 +4,11 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore; // Ensure this is included
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Payment.Application.Contracts.Publisher;
 using Payment.Application.Contracts.Repositories;
 using Payment.Application.Interfaces;
+using Payment.Infrastructure.Consumers;
+using Payment.Infrastructure.Publisher;
 using Payment.Infrastructure.Services;
 
 namespace Payment.Infrastructure
@@ -21,6 +24,8 @@ namespace Payment.Infrastructure
 
             services.AddMassTransit(x =>
             {
+                x.AddConsumer<PayloadMessageConsumer>();
+
                 x.UsingRabbitMq((context, cfg) =>
                 {
                     cfg.Host("localhost", "/", h =>
@@ -42,6 +47,8 @@ namespace Payment.Infrastructure
 
             services.AddScoped<ITransactionRepository, TransactionService>();
             services.AddScoped<IDispatcher, Dispatcher>();
+            services.AddScoped<IMessagePublisher, MessagePublisher>();
+            services.AddScoped<OutboxProcessor>();
 
             return services;
         }

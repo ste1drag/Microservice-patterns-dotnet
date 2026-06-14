@@ -30,10 +30,14 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-RecurringJob.AddOrUpdate<OutboxProcessor>(
-    "ProcessOutboxMessages",
-    processor => processor.ProcessOutboxMessagesAsync(CancellationToken.None),
-    Cron.Minutely);
+using (var scope = app.Services.CreateScope())
+{
+    var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+    recurringJobManager.AddOrUpdate<OutboxProcessor>(
+        "ProcessOutboxMessages",
+        processor => processor.ProcessOutboxMessagesAsync(CancellationToken.None),
+        Cron.Minutely);
+}
 
 
 if (app.Environment.IsDevelopment())

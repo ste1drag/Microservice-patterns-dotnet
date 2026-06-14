@@ -27,8 +27,4 @@
     <ProjectReference Include="..\Game.Application\Game.Application.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Messaging\" />
-  </ItemGroup>
-
 </Project>

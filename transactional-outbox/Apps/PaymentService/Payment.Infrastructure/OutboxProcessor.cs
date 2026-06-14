@@ -1,14 +1,11 @@
-﻿using MassTransit;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Payment.Infrastructure.Consumers;
+using Payment.Application.Contracts.Publisher;
 using Shared.Events;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Payment.Infrastructure
@@ -30,7 +27,7 @@ namespace Payment.Infrastructure
         {
             using var scope = _scopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<PaymentDbContext>();
-            var consumer = scope.ServiceProvider.GetRequiredService<PayloadMessageConsumer>();
+            var publisher = scope.ServiceProvider.GetRequiredService<IMessagePublisher>();
 
             var outboxMessages = await dbContext.OutboxMessages
                 .Where(m => m.ProcessedAt == null)
@@ -42,11 +39,10 @@ namespace Payment.Infrastructure
             {
                 try
                 {
-                    if (message.Type == nameof(PaymentRequestedMessage))
+                    if (message.Type == nameof(PaymentCompletedMessage))
                     {
-                        var evt = JsonSerializer.Deserialize<PaymentRequestedMessage>(message.Payload)!;
-                        var consumeContext = new ConsumeContextWrapper<PaymentRequestedMessage>(evt);
-                        await consumer.Consume(consumeContext);
+                        var evt = JsonSerializer.Deserialize<PaymentCompletedMessage>(message.Payload)!;
+                        await publisher.PublishAsync(evt, ct);
                     }
                     else
                     {

@@ -70,11 +70,22 @@ namespace Payment.Infrastructure.Services
 
             _paymentDbcontext.Transactions.Add(transaction);
 
+            var paymentCompleted = new PaymentCompletedMessage
+            {
+                ReservationId = message.ReservationId,
+                GameTicketId = message.GameTicketId,
+                TransactionId = transaction.Id,
+                Success = status == PaymentStatus.Completed,
+                Message = status == PaymentStatus.Completed
+                    ? "Payment executed successfully"
+                    : "Payment failed (invalid amount)"
+            };
+
             var outboxMessage = new OutboxMessage
             {
                 Id = Guid.NewGuid(),
-                Type = nameof(PaymentRequestedMessage),
-                Payload = System.Text.Json.JsonSerializer.Serialize(message),
+                Type = nameof(PaymentCompletedMessage),
+                Payload = System.Text.Json.JsonSerializer.Serialize(paymentCompleted),
                 CreatedAt = DateTime.UtcNow
             };
 

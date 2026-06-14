@@ -2,6 +2,7 @@
 using Game.Application.Contracts.Repository;
 using Game.Application.Interfaces;
 using Game.Infrastructure.Clients;
+using Game.Infrastructure.Consumers;
 using Game.Infrastructure.Services;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
@@ -54,6 +55,8 @@ namespace Game.Infrastructure
 
             services.AddMassTransit(x =>
             {
+                x.AddConsumer<PaymentCompletedConsumer>();
+
                 x.UsingRabbitMq((context, cfg) =>
                 {
                     cfg.Host("localhost", "/", h =>
