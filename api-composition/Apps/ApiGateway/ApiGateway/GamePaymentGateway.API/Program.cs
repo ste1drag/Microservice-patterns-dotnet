@@ -30,22 +30,64 @@ app.MapGet("/GetGameTransaction/game/{gameTicketId:guid}/transaction/{transactio
     var gameClient = httpClientFactory.CreateClient("game");
     var paymentClient = httpClientFactory.CreateClient("payment");
 
-    var gameTicketTask=  gameClient.GetFromJsonAsync<object>(
-        $"api/Game/get-ticket-info/{gameTicketId}", ct);
-    var transactionTask =  paymentClient.GetFromJsonAsync<object>(
-        $"api/Payment/get-transaction-info/game/{gameTicketId}/transaction/{transactionId}", ct);
+    var gameTicketTask = GetJsonOrNullAsync(
+        gameClient,
+        $"api/Game/get-ticket-info/{gameTicketId}",
+        ct);
+    var transactionTask = GetJsonOrNullAsync(
+        paymentClient,
+        $"api/Payment/get-transaction-info/game/{gameTicketId}/transaction/{transactionId}",
+        ct);
 
     await Task.WhenAll(gameTicketTask, transactionTask);
+
+    var gameTicketInfo = await gameTicketTask;
+    var transactionInfo = await transactionTask;
+
+    if (gameTicketInfo is null && transactionInfo is null)
+    {
+        return Results.NotFound(new
+        {
+            gameTicketId,
+            transactionId,
+            message = "Neither game ticket nor transaction was found."
+        });
+    }
 
     return Results.Ok(new
     {
         gameTicketId,
         transactionId,
-        gameTicketInfo = gameTicketTask.Result,
-        transactionInfo = transactionTask.Result
+        gameTicketInfo,
+        transactionInfo
     });
 });
 
+static async Task<object?> GetJsonOrNullAsync(HttpClient client, string requestUri, CancellationToken ct)
+{
+    using var response = await client.GetAsync(requestUri, ct);
+
+    if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+    {
+        return null;
+    }
+
+    response.EnsureSuccessStatusCode();
+
+    if (response.StatusCode == System.Net.HttpStatusCode.NoContent
+        || response.Content.Headers.ContentLength == 0)
+    {
+        return null;
+    }
+
+    var content = await response.Content.ReadAsStringAsync(ct);
+    if (string.IsNullOrWhiteSpace(content))
+    {
+        return null;
+    }
+
+    return System.Text.Json.JsonSerializer.Deserialize<object>(content);
+}
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

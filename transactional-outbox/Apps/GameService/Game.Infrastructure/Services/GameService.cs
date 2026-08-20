@@ -1,18 +1,21 @@
-﻿using Game.Application.Contracts.Client;
-using Game.Application.Contracts.Repository;
+﻿using Game.Application.Contracts.Repository;
 using Game.Application.UseCases.Commands.DTO;
 using Game.Domain.Entities;
 using Game.Domain.Enums;
 using Game.Domain.Interfaces;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using Shared.Events;
 
 namespace Game.Infrastructure.Services
 {
     public class GameService : BaseService<Domain.Entities.Game>, IGameRepository
     {
+        private readonly IPublishEndpoint _publishEndpoint;
 
-        public GameService(GameDbContext gameDbContext) : base(gameDbContext)
+        public GameService(GameDbContext gameDbContext, IPublishEndpoint publishEndpoint) : base(gameDbContext)
         {
+            _publishEndpoint = publishEndpoint;
         }
 
         public async Task<List<Domain.Entities.Game>> GetAllGamesWithDetailsAsync()
@@ -142,9 +145,12 @@ namespace Game.Infrastructure.Services
             return updated > 0;
         }
 
-        public async Task<bool> ReserveTicketWithOutboxAsync(Guid ticketId, Guid reservationId, OutboxMessage outbox)
+        public async Task<bool> ReserveTicketAndPublishAsync(
+            Guid ticketId,
+            Guid reservationId,
+            PaymentRequestedMessage message)
         {
-            using var transaction = await _gameDbContext.Database.BeginTransactionAsync();
+            await using var transaction = await _gameDbContext.Database.BeginTransactionAsync();
             try
             {
                 var updated = await _gameDbContext.GameTickets
@@ -161,7 +167,7 @@ namespace Game.Infrastructure.Services
                     return false;
                 }
 
-                _gameDbContext.OutboxMessages.Add(outbox);
+                await _publishEndpoint.Publish(message);
                 await _gameDbContext.SaveChangesAsync();
                 await transaction.CommitAsync();
                 return true;

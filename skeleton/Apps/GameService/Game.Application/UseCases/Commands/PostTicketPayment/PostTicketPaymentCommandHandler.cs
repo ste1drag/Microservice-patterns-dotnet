@@ -29,7 +29,7 @@ namespace Game.Application.UseCases.Commands.PostTicketPayment
                 {
                     GameTicketId = dto.GameTicketId,
                     Status = PaymentStatus.Failed,
-                    Message = "Ticket is not available"
+                    Message = "Karta nije dostupna"
                 };
             }
 
@@ -50,7 +50,7 @@ namespace Game.Application.UseCases.Commands.PostTicketPayment
                 {
                     GameTicketId = dto.GameTicketId,
                     Status = PaymentStatus.Failed,
-                    Message = $"Payment processing failed: {ex.Message}"
+                    Message = $"Placanje neuspesno: {ex.Message}"
                 };
             }
         }

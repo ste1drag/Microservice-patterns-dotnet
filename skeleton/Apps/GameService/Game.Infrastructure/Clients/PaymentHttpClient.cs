@@ -26,7 +26,7 @@ namespace Game.Infrastructure.Clients
             var result = await response.Content.ReadFromJsonAsync<PaymentResultDto>();
             if (result == null)
             {
-                throw new InvalidOperationException("Payment service returned empty response.");
+                throw new InvalidOperationException("Payment servis vratio prazan odgovor");
             }
 
             return result;

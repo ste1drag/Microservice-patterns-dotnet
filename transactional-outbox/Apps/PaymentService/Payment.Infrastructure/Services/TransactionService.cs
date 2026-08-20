@@ -1,21 +1,21 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MassTransit;
+using Microsoft.EntityFrameworkCore;
 using Payment.Application.Contracts.Repositories;
 using Payment.Application.UseCases.Commands.DTO;
 using Payment.Domain.Entities;
 using Payment.Domain.Enums;
 using Shared.Events;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Payment.Infrastructure.Services
 {
     public class TransactionService: BaseService<Transaction>, ITransactionRepository
     {
-        public TransactionService(PaymentDbContext paymentDbContext) : base(paymentDbContext)
+        private readonly IPublishEndpoint _publishEndpoint;
+
+        public TransactionService(PaymentDbContext paymentDbContext, IPublishEndpoint publishEndpoint)
+            : base(paymentDbContext)
         {
+            _publishEndpoint = publishEndpoint;
         }
 
         public async Task<PaymentResultDto> ExecutePayment(TicketSeatPaymentDTO ticketSeatPaymentDTO)
@@ -81,15 +81,7 @@ namespace Payment.Infrastructure.Services
                     : "Payment failed (invalid amount)"
             };
 
-            var outboxMessage = new OutboxMessage
-            {
-                Id = Guid.NewGuid(),
-                Type = nameof(PaymentCompletedMessage),
-                Payload = System.Text.Json.JsonSerializer.Serialize(paymentCompleted),
-                CreatedAt = DateTime.UtcNow
-            };
-
-            _paymentDbcontext.OutboxMessages.Add(outboxMessage);
+            await _publishEndpoint.Publish(paymentCompleted);
             await _paymentDbcontext.SaveChangesAsync();
         }
 

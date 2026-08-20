@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Game.Application.UseCases.Commands.DTO;
+﻿using Game.Application.UseCases.Commands.DTO;
 using Game.Domain.Entities;
 using Game.Domain.Interfaces;
+using Shared.Events;
 
 namespace Game.Application.Contracts.Repository
 {
@@ -21,9 +17,9 @@ namespace Game.Application.Contracts.Repository
         Task<bool> ReleaseTicketAsync(Guid ticketId);
         Task<GameTicket> GetGameTicketByIdAsync(Guid ticketId);
 
-        Task<bool> ReserveTicketWithOutboxAsync(
-        Guid ticketId,
-        Guid reservationId,
-        OutboxMessage outbox);
+        Task<bool> ReserveTicketAndPublishAsync(
+            Guid ticketId,
+            Guid reservationId,
+            PaymentRequestedMessage message);
     }
 }

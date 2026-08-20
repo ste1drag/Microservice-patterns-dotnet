@@ -36,7 +36,7 @@ namespace Game.Infrastructure
             var circuitBreakerPolicy = GetCircuitBreakerPolicy();
 
             services.AddDbContext<GameDbContext>(options =>
-                options.UseNpgsql(connectionString)); // Ensure the Npgsql package is installed
+                options.UseNpgsql(connectionString));
 
             var paymentServiceUrl = configuration["Services:PaymentServiceUrl"] ?? "http://localhost:5001/api/payment/";
             

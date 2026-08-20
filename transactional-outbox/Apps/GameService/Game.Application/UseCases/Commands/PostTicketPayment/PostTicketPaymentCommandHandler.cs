@@ -1,10 +1,8 @@
 ﻿using Game.Application.Contracts.Handlers;
 using Game.Application.Contracts.Repository;
 using Game.Application.UseCases.Commands.DTO;
-using Game.Domain.Entities;
 using Game.Domain.Enums;
 using Shared.Events;
-using System.Text.Json;
 
 namespace Game.Application.UseCases.Commands.PostTicketPayment
 {
@@ -30,18 +28,10 @@ namespace Game.Application.UseCases.Commands.PostTicketPayment
                 Currency = (int)dto.Currency
             };
 
-            var outboxMessage = new OutboxMessage
-            {
-                Id = Guid.NewGuid(),
-                Type = nameof(PaymentRequestedMessage),
-                Payload = JsonSerializer.Serialize(paymentRequested),
-                CreatedAt = DateTime.UtcNow
-            };
-
-            var reserved = await _gameRepository.ReserveTicketWithOutboxAsync(
+            var reserved = await _gameRepository.ReserveTicketAndPublishAsync(
                 dto.GameTicketId,
                 dto.ReservationId,
-                outboxMessage);
+                paymentRequested);
 
             if (!reserved)
             {

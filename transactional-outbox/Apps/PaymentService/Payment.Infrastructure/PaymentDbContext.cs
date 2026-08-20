@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Payment.Domain.Entities;
 
@@ -16,11 +12,14 @@ namespace Payment.Infrastructure
 
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Refund> Refunds { get; set; }
-        public DbSet<OutboxMessage> OutboxMessages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.AddInboxStateEntity();
+            modelBuilder.AddOutboxMessageEntity();
+            modelBuilder.AddOutboxStateEntity();
 
             modelBuilder.Entity<Transaction>(entity =>
             {
@@ -44,31 +43,6 @@ namespace Payment.Infrastructure
                       .HasForeignKey(e => e.TransactionId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
-
-            modelBuilder.Entity<OutboxMessage>()
-                .HasKey(om => om.Id);
-
-            modelBuilder.Entity<OutboxMessage>()
-                .Property(om => om.Id)
-                .ValueGeneratedNever();
-
-            modelBuilder.Entity<OutboxMessage>()
-                .Property(om => om.ProcessedAt);
-
-            modelBuilder.Entity<OutboxMessage>()
-                .Property(om => om.Type)
-                .IsRequired();
-
-            modelBuilder.Entity<OutboxMessage>()
-                .Property(om => om.Payload)
-                .IsRequired();
-
-            modelBuilder.Entity<OutboxMessage>()
-                .Property(om => om.CreatedAt)
-                .IsRequired();
-
-            modelBuilder.Entity<OutboxMessage>()
-                .Property(om => om.Error);
         }
     }
 }

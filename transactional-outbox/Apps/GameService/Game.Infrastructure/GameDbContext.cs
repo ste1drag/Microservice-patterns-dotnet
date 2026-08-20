@@ -1,4 +1,5 @@
 ﻿using Game.Domain.Entities;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 
 namespace Game.Infrastructure
@@ -12,13 +13,16 @@ namespace Game.Infrastructure
         public DbSet<Domain.Entities.Team> Teams { get; set; }
         public DbSet<Domain.Entities.Stadium> Stadiums { get; set; }
         public DbSet<Domain.Entities.Game> Games { get; set; }
-        public DbSet<Domain.Entities.OutboxMessage> OutboxMessages { get; set; }
         public DbSet<Domain.Entities.StadiumSeat> StadiumSeats { get; set; }
         public DbSet<Domain.Entities.GameTicket> GameTickets { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.AddInboxStateEntity();
+            modelBuilder.AddOutboxMessageEntity();
+            modelBuilder.AddOutboxStateEntity();
 
             modelBuilder.Entity<StadiumSeat>()
                 .HasOne(s => s.Stadium)
@@ -62,32 +66,6 @@ namespace Game.Infrastructure
                 .Property(gt => gt.Status)
                 .HasConversion<int>()
                 .IsRequired();
-
-            //add OutboxMessage entity
-            modelBuilder.Entity<OutboxMessage>()
-                .HasKey(om => om.Id);
-
-            modelBuilder.Entity<OutboxMessage>()
-                .Property(om => om.Id)
-                .ValueGeneratedNever();
-
-            modelBuilder.Entity<OutboxMessage>()
-                .Property(om => om.ProcessedAt);
-
-            modelBuilder.Entity<OutboxMessage>()
-                .Property(om => om.Type)
-                .IsRequired();
-
-            modelBuilder.Entity<OutboxMessage>()
-                .Property(om => om.Payload)
-                .IsRequired();
-
-            modelBuilder.Entity<OutboxMessage>()
-                .Property(om => om.CreatedAt)
-                .IsRequired();
-
-            modelBuilder.Entity<OutboxMessage>()
-                .Property(om => om.Error);
         }
     }
 }

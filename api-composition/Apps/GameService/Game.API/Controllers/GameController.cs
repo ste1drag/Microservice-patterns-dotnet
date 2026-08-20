@@ -73,6 +73,11 @@ namespace Game.API.Controllers
         {
             var query = new GetGameTicketInfoQuery { TicketId = gameTicketId };
             var result = await _dispatcher.Query(query);
+            if (result == null)
+            {
+                return NotFound();
+            }
+
             return Ok(result);
         }
 

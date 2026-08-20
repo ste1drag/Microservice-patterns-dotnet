@@ -17,7 +17,7 @@ namespace Game.Infrastructure
             var connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("String connection not available");
 
             services.AddDbContext<GameDbContext>(options =>
-                options.UseNpgsql(connectionString)); // Ensure the Npgsql package is installed
+                options.UseNpgsql(connectionString));
 
             var paymentServiceUrl = configuration["Services:PaymentServiceUrl"] ?? "http://localhost:5001/api/payment/";
             

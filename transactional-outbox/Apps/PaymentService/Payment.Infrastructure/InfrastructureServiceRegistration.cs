@@ -1,7 +1,5 @@
-﻿using Hangfire;
-using Hangfire.PostgreSql;
-using MassTransit;
-using Microsoft.EntityFrameworkCore; // Ensure this is included
+﻿using MassTransit;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Payment.Application.Contracts.Publisher;
@@ -26,6 +24,18 @@ namespace Payment.Infrastructure
             {
                 x.AddConsumer<PayloadMessageConsumer>();
 
+                x.AddEntityFrameworkOutbox<PaymentDbContext>(o =>
+                {
+                    o.QueryDelay = TimeSpan.FromSeconds(1);
+                    o.UsePostgres();
+                    o.UseBusOutbox();
+                });
+
+                x.AddConfigureEndpointsCallback((context, name, cfg) =>
+                {
+                    cfg.UseEntityFrameworkOutbox<PaymentDbContext>(context);
+                });
+
                 x.UsingRabbitMq((context, cfg) =>
                 {
                     cfg.Host("localhost", "/", h =>
@@ -37,18 +47,9 @@ namespace Payment.Infrastructure
                 });
             });
 
-            services.AddHangfire(config =>
-                config.UsePostgreSqlStorage(connectionString)
-                       .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-                       .UseSimpleAssemblyNameTypeSerializer()
-                       .UseRecommendedSerializerSettings());
-            services.AddHangfireServer();
-
-
             services.AddScoped<ITransactionRepository, TransactionService>();
             services.AddScoped<IDispatcher, Dispatcher>();
             services.AddScoped<IMessagePublisher, MessagePublisher>();
-            services.AddScoped<OutboxProcessor>();
 
             return services;
         }
